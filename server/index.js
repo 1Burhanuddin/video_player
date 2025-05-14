@@ -25,7 +25,7 @@ const validCredentials = {
 };
 
 // Login route
-app.post('/api/login', (req, res) => {
+app.post('/', (req, res) => {
   const { username, password } = req.body;
   if (username === validCredentials.username && password === validCredentials.password) {
     req.session.user = { username };
