@@ -24,8 +24,11 @@ const validCredentials = {
   password: 'password'
 };
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 // Login route
-app.post('/', (req, res) => {
+app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === validCredentials.username && password === validCredentials.password) {
     req.session.user = { username };
