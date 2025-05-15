@@ -3,7 +3,7 @@ import './App.css'
 import SecureVideo from './components/SecureVideo'
 
 const API_URL = import.meta.env.PROD 
-  ? 'https://your-backend-domain.vercel.app/api'
+  ? 'https://video-player-s.vercel.app/api'
   : 'http://localhost:5000/api'
 
 function App() {
