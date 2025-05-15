@@ -5,13 +5,13 @@ function SecureVideo() {
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false)
 
   useEffect(() => {
-
+    // Prevent right click
     const handleContextMenu = (e) => {
       e.preventDefault()
       return false
     }
 
-
+    // Prevent inspect element and dev tools
     const handleKeyDown = (e) => {
       const devToolsKeys = [
         { key: 'F12' },
@@ -35,7 +35,7 @@ function SecureVideo() {
       }
     }
 
-
+    // Detect dev tools
     const handleDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160
       const heightThreshold = window.outerHeight - window.innerHeight > 160
@@ -45,15 +45,15 @@ function SecureVideo() {
       }
     }
 
-
+    // Add event listeners
     document.addEventListener('contextmenu', handleContextMenu)
     document.addEventListener('keydown', handleKeyDown)
     window.addEventListener('resize', handleDevTools)
 
-
+    // Initial check
     handleDevTools()
 
-
+    // Cleanup
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu)
       document.removeEventListener('keydown', handleKeyDown)
@@ -77,15 +77,22 @@ function SecureVideo() {
       className="youtube-container"
       onContextMenu={(e) => e.preventDefault()}
     >
-      <iframe
-        width="100%"
-        height="500"
-        src="https://www.youtube.com/embed/dqFY2ijqM-4"
-        title="YouTube video player"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
+      <div 
+        className="video-overlay"
+        onContextMenu={(e) => e.preventDefault()}
+        onClick={(e) => e.preventDefault()}
+      >
+        <iframe
+          width="100%"
+          height="500"
+          src="https://www.youtube.com/embed/dqFY2ijqM-4?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1"
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ pointerEvents: 'none' }}
+        />
+      </div>
     </div>
   )
 }
