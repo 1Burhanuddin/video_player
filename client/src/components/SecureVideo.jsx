@@ -5,6 +5,9 @@ function SecureVideo() {
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [showControls, setShowControls] = useState(true)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const hideControlsTimeout = useRef(null)
 
   useEffect(() => {
     // Prevent right click
@@ -60,20 +63,59 @@ function SecureVideo() {
       document.removeEventListener('contextmenu', handleContextMenu)
       document.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('resize', handleDevTools)
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current)
+      }
     }
   }, [])
 
   const handlePlayClick = () => {
     setIsPlaying(true)
     setIsPaused(false)
+    setShowControls(true)
+    startHideControlsTimer()
   }
 
   const handlePauseClick = () => {
     setIsPaused(true)
+    setShowControls(true)
+    if (hideControlsTimeout.current) {
+      clearTimeout(hideControlsTimeout.current)
+    }
   }
 
   const handleResumeClick = () => {
     setIsPaused(false)
+    setShowControls(true)
+    startHideControlsTimer()
+  }
+
+  const startHideControlsTimer = () => {
+    if (hideControlsTimeout.current) {
+      clearTimeout(hideControlsTimeout.current)
+    }
+    hideControlsTimeout.current = setTimeout(() => {
+      if (isPlaying && !isPaused) {
+        setShowControls(false)
+      }
+    }, 2000)
+  }
+
+  const handleMouseMove = () => {
+    if (isPlaying && !isPaused) {
+      setShowControls(true)
+      startHideControlsTimer()
+    }
+  }
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
   }
 
   if (isDevToolsOpen) {
@@ -91,6 +133,7 @@ function SecureVideo() {
       ref={containerRef}
       className="youtube-container"
       onContextMenu={(e) => e.preventDefault()}
+      onMouseMove={handleMouseMove}
     >
       <div 
         className="video-overlay"
@@ -103,19 +146,28 @@ function SecureVideo() {
             onContextMenu={(e) => e.preventDefault()}
           />
         )}
-        {isPlaying && isPaused && (
+        {isPlaying && isPaused && showControls && (
           <div 
             className="resume-button"
             onClick={handleResumeClick}
             onContextMenu={(e) => e.preventDefault()}
           />
         )}
-        {isPlaying && !isPaused && (
+        {isPlaying && !isPaused && showControls && (
           <div 
             className="pause-button"
             onClick={handlePauseClick}
             onContextMenu={(e) => e.preventDefault()}
           />
+        )}
+        {isPlaying && showControls && (
+          <div 
+            className="fullscreen-button"
+            onClick={toggleFullscreen}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {isFullscreen ? '⤓' : '⤢'}
+          </div>
         )}
         <iframe
           width="100%"
