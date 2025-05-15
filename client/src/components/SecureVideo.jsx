@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 function SecureVideo() {
   const containerRef = useRef(null)
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     // Prevent right click
@@ -61,6 +62,10 @@ function SecureVideo() {
     }
   }, [])
 
+  const handlePlayClick = () => {
+    setIsPlaying(true)
+  }
+
   if (isDevToolsOpen) {
     return (
       <div className="dev-tools-warning">
@@ -80,17 +85,23 @@ function SecureVideo() {
       <div 
         className="video-overlay"
         onContextMenu={(e) => e.preventDefault()}
-        onClick={(e) => e.preventDefault()}
       >
+        {!isPlaying && (
+          <div 
+            className="play-button"
+            onClick={handlePlayClick}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
         <iframe
           width="100%"
           height="500"
-          src="https://www.youtube.com/embed/dqFY2ijqM-4?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1"
+          src={`https://www.youtube.com/embed/dqFY2ijqM-4?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1${isPlaying ? '&autoplay=1' : ''}`}
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          style={{ pointerEvents: 'none' }}
+          style={{ pointerEvents: isPlaying ? 'auto' : 'none' }}
         />
       </div>
     </div>

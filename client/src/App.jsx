@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import SecureVideo from './components/SecureVideo'
 
@@ -12,6 +12,23 @@ function App() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Check session status on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`${API_URL}/protected`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          setIsLoggedIn(true)
+        }
+      } catch (err) {
+        console.error('Session check error:', err)
+      }
+    }
+    checkSession()
+  }, [])
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -43,15 +60,19 @@ function App() {
     setIsLoading(true)
     try {
       const response = await fetch(`${API_URL}/logout`, {
+        method: 'POST',
         credentials: 'include'
       })
       if (response.ok) {
         setIsLoggedIn(false)
         setUsername('')
         setPassword('')
+      } else {
+        setError('Logout failed')
       }
     } catch (err) {
       console.error('Logout error:', err)
+      setError('An error occurred during logout')
     } finally {
       setIsLoading(false)
     }
