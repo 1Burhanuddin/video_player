@@ -3,11 +3,9 @@ const session = require('express-session');
 const path = require('path');
 const cors = require('cors');
 
-
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-
+// Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -15,10 +13,10 @@ app.use((req, res, next) => {
   next();
 });
 
-
+// Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? 'https://your-production-domain.com' 
+    ? process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app'
     : 'http://localhost:5173',
   credentials: true
 }));
@@ -26,7 +24,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
+// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -34,10 +32,10 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
-
 
 const isAuthenticated = (req, res, next) => {
   if (req.session.user) {
@@ -47,12 +45,10 @@ const isAuthenticated = (req, res, next) => {
   }
 };
 
-
 const validCredentials = {
   username: 'admin',
   password: 'password'
 };
-
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
@@ -69,7 +65,6 @@ app.post('/api/login', (req, res) => {
   return res.status(401).json({ message: 'Invalid credentials' });
 });
 
-
 app.get('/api/logout', isAuthenticated, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -79,7 +74,6 @@ app.get('/api/logout', isAuthenticated, (req, res) => {
   });
 });
 
-
 app.get('/api/protected', isAuthenticated, (req, res) => {
   res.status(200).json({ 
     message: 'Protected route accessed', 
@@ -87,15 +81,18 @@ app.get('/api/protected', isAuthenticated, (req, res) => {
   });
 });
 
-
-
-
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-}); 
+// Export for Vercel
+module.exports = app; 

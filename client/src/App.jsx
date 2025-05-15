@@ -2,6 +2,10 @@ import { useState } from 'react'
 import './App.css'
 import SecureVideo from './components/SecureVideo'
 
+const API_URL = import.meta.env.PROD 
+  ? 'https://your-backend-domain.vercel.app/api'
+  : 'http://localhost:5000/api'
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
@@ -15,7 +19,7 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -38,7 +42,7 @@ function App() {
   const handleLogout = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/logout', {
+      const response = await fetch(`${API_URL}/logout`, {
         credentials: 'include'
       })
       if (response.ok) {
