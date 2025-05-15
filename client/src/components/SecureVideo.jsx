@@ -4,6 +4,7 @@ function SecureVideo() {
   const containerRef = useRef(null)
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
     // Prevent right click
@@ -64,6 +65,15 @@ function SecureVideo() {
 
   const handlePlayClick = () => {
     setIsPlaying(true)
+    setIsPaused(false)
+  }
+
+  const handlePauseClick = () => {
+    setIsPaused(true)
+  }
+
+  const handleResumeClick = () => {
+    setIsPaused(false)
   }
 
   if (isDevToolsOpen) {
@@ -93,15 +103,32 @@ function SecureVideo() {
             onContextMenu={(e) => e.preventDefault()}
           />
         )}
+        {isPlaying && isPaused && (
+          <div 
+            className="resume-button"
+            onClick={handleResumeClick}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
+        {isPlaying && !isPaused && (
+          <div 
+            className="pause-button"
+            onClick={handlePauseClick}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
         <iframe
           width="100%"
           height="500"
-          src={`https://www.youtube.com/embed/dqFY2ijqM-4?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1${isPlaying ? '&autoplay=1' : ''}`}
-          title="YouTube video player"
+          src={`https://www.youtube.com/embed/dqFY2ijqM-4?modestbranding=1&rel=0&showinfo=0&controls=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1${isPlaying ? '&autoplay=1' : ''}`}
+          title="Video Player"
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ pointerEvents: isPlaying ? 'auto' : 'none' }}
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen={false}
+          style={{ 
+            pointerEvents: 'none',
+            opacity: isPaused ? 0.5 : 1
+          }}
         />
       </div>
     </div>
