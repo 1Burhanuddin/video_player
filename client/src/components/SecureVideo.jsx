@@ -1,59 +1,75 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 function SecureVideo() {
   const containerRef = useRef(null)
+  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false)
 
   useEffect(() => {
-    // Prevent right click
+
     const handleContextMenu = (e) => {
       e.preventDefault()
       return false
     }
 
-    // Prevent inspect element
+
     const handleKeyDown = (e) => {
-      // Prevent F12
-      if (e.key === 'F12') {
+      const devToolsKeys = [
+        { key: 'F12' },
+        { key: 'I', ctrl: true, shift: true },
+        { key: 'C', ctrl: true, shift: true },
+        { key: 'J', ctrl: true, shift: true },
+        { key: 'U', ctrl: true }
+      ]
+
+      const isDevToolsKey = devToolsKeys.some(
+        ({ key, ctrl, shift }) => 
+          e.key === key && 
+          (!ctrl || e.ctrlKey) && 
+          (!shift || e.shiftKey)
+      )
+
+      if (isDevToolsKey) {
         e.preventDefault()
-        return false
-      }
-      // Prevent Ctrl+Shift+I (Windows) or Cmd+Option+I (Mac)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
-        e.preventDefault()
-        return false
-      }
-      // Prevent Ctrl+Shift+C (Windows) or Cmd+Option+C (Mac)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
-        e.preventDefault()
+        setIsDevToolsOpen(true)
         return false
       }
     }
 
-    // Prevent dev tools
+
     const handleDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160
       const heightThreshold = window.outerHeight - window.innerHeight > 160
       
       if (widthThreshold || heightThreshold) {
-        document.body.innerHTML = 'Developer tools are not allowed on this page.'
+        setIsDevToolsOpen(true)
       }
     }
 
-    // Add event listeners
+
     document.addEventListener('contextmenu', handleContextMenu)
     document.addEventListener('keydown', handleKeyDown)
     window.addEventListener('resize', handleDevTools)
 
-    // Initial check for dev tools
+
     handleDevTools()
 
-    // Cleanup
+
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu)
       document.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('resize', handleDevTools)
     }
   }, [])
+
+  if (isDevToolsOpen) {
+    return (
+      <div className="dev-tools-warning">
+        <h2>Access Denied</h2>
+        <p>Developer tools are not allowed on this page.</p>
+        <p>Please close developer tools to continue.</p>
+      </div>
+    )
+  }
 
   return (
     <div 

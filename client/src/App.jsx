@@ -7,9 +7,13 @@ function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
@@ -18,25 +22,34 @@ function App() {
         credentials: 'include'
       })
       const data = await response.json()
+      
       if (response.ok) {
         setIsLoggedIn(true)
-        setError('')
       } else {
-        setError(data.message)
+        setError(data.message || 'Login failed')
       }
     } catch (err) {
       setError('An error occurred during login')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleLogout = async () => {
+    setIsLoading(true)
     try {
-      await fetch('/api/logout', {
+      const response = await fetch('/api/logout', {
         credentials: 'include'
       })
-      setIsLoggedIn(false)
+      if (response.ok) {
+        setIsLoggedIn(false)
+        setUsername('')
+        setPassword('')
+      }
     } catch (err) {
       console.error('Logout error:', err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -51,14 +64,18 @@ function App() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
             />
             <input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
-            <button type="submit">Login</button>
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
+            </button>
           </form>
           {error && <p className="error">{error}</p>}
         </div>
@@ -66,8 +83,12 @@ function App() {
         <div className="video-container">
           <h1>Video Player</h1>
           <SecureVideo />
-          <button onClick={handleLogout} className="logout-button">
-            Logout
+          <button 
+            onClick={handleLogout} 
+            className="logout-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging out...' : 'Logout'}
           </button>
         </div>
       )}
