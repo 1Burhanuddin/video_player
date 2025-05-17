@@ -7,14 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Ensure the build is optimized for production
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+    minify: 'terser'
   },
   // Remove the proxy configuration for production
   server: process.env.NODE_ENV === 'development' ? {
