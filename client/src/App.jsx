@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import SecureVideo from './components/SecureVideo'
 
+// Use relative URL in development to work with Vite's proxy
 const API_URL = import.meta.env.PROD 
   ? 'https://video-player-s.vercel.app/api'
-  : 'http://localhost:5000/api'
+  : '/api'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -17,14 +18,20 @@ function App() {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log('Checking session...')
         const response = await fetch(`${API_URL}/protected`, {
           credentials: 'include'
         })
         if (response.ok) {
+          console.log('Session valid')
           setIsLoggedIn(true)
+        } else {
+          console.log('No valid session')
+          setIsLoggedIn(false)
         }
       } catch (err) {
         console.error('Session check error:', err)
+        setIsLoggedIn(false)
       }
     }
     checkSession()
@@ -36,6 +43,7 @@ function App() {
     setError('')
 
     try {
+      console.log('Attempting login...')
       const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,12 +53,15 @@ function App() {
       const data = await response.json()
       
       if (response.ok) {
+        console.log('Login successful')
         setIsLoggedIn(true)
       } else {
+        console.error('Login failed:', data.message)
         setError(data.message || 'Login failed')
       }
     } catch (err) {
-      setError('An error occurred during login')
+      console.error('Login error:', err)
+      setError('An error occurred during login. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -59,15 +70,20 @@ function App() {
   const handleLogout = async () => {
     setIsLoading(true)
     try {
+      console.log('Attempting logout...')
       const response = await fetch(`${API_URL}/logout`, {
         method: 'POST',
         credentials: 'include'
       })
+      const data = await response.json()
+      
       if (response.ok) {
+        console.log('Logout successful')
         setIsLoggedIn(false)
         setUsername('')
         setPassword('')
       } else {
+        console.error('Logout failed:', data.message)
         setError('Logout failed')
       }
     } catch (err) {

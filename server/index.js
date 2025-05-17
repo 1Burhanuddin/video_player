@@ -5,24 +5,40 @@ const cors = require('cors');
 
 const app = express();
 
+// Middleware
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app'
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Set CSP based on environment
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; connect-src 'self' https://video-player-s.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
+    );
+  } else {
+    // Development CSP - more permissive
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self' https://www.youtube.com; connect-src 'self' http://localhost:* http://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
+    );
+  }
   next();
 });
-
-// Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app'
-    : 'http://localhost:5173',
-  credentials: true
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
 app.use(session({
@@ -30,10 +46,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: 'lax'
   }
 }));
 
@@ -65,9 +81,10 @@ app.post('/api/login', (req, res) => {
   return res.status(401).json({ message: 'Invalid credentials' });
 });
 
-app.get('/api/logout', isAuthenticated, (req, res) => {
+app.all('/api/logout', isAuthenticated, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
+      console.error('Logout error:', err);
       return res.status(500).json({ message: 'Error logging out' });
     }
     res.status(200).json({ message: 'Logged out successfully' });
