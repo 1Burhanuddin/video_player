@@ -6,13 +6,13 @@ const cors = require('cors');
 const app = express();
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://video-player-f.vercel.app',
+  origin: 'https://video-player-f.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}
+};
 
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,10 +22,13 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app; connect-src 'self' https://video-player-f.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
-  );
+  const csp = "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app; " +
+              "connect-src 'self' https://video-player-s.vercel.app; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; " +
+              "frame-src 'self' https://www.youtube.com; " +
+              "style-src 'self' 'unsafe-inline';";
+  
+  res.setHeader('Content-Security-Policy', csp);
   next();
 });
 
