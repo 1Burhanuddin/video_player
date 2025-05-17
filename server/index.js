@@ -28,7 +28,7 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; connect-src 'self' https://video-player-s.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
+      "default-src 'self' https://www.youtube.com https://video-player-s.vercel.app; connect-src 'self' https://video-player-s.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
     );
   } else {
     // Development CSP - more permissive
