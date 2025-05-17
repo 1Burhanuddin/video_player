@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import SecureVideo from './components/SecureVideo'
 
-// Use relative URL in development to work with Vite's proxy
 const API_URL = import.meta.env.PROD 
   ? 'https://video-player-s.vercel.app/api'
   : '/api'
@@ -14,7 +13,6 @@ function App() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Check session status on mount
   useEffect(() => {
     const checkSession = async () => {
       try {

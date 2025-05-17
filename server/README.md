@@ -9,7 +9,7 @@
 
 2. Start the server:
    ```bash
-   npm start
+   npm run dev
    ```
 
    For development with auto-restart:
@@ -24,7 +24,3 @@
 - **GET /api/protected**: Example protected route that requires authentication.
 - **GET /api/stream**: Stream video (requires authentication).
 
-## Notes
-
-- The video path is set to `../videos/sample.mp4`. Replace it with your actual video path.
-- Session secret is set to 'your-secret-key'. Change it in production. 

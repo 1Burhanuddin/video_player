@@ -12,11 +12,18 @@ function SecureVideo() {
   const hideControlsTimeout = useRef(null)
   const playerId = 'youtube-player-unique'
 
+  
+  const [progress, setProgress] = useState(0); 
+  const [dragging, setDragging] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const progressBarRef = useRef(null);
+  const [videoEnded, setVideoEnded] = useState(false)
+
   useEffect(() => {
     function createPlayer() {
       if (playerRef.current) return;
       const playerDiv = document.getElementById(playerId);
-      if (!playerDiv) return; // Wait until the div is mounted
+      if (!playerDiv) return; 
       playerRef.current = new window.YT.Player(playerId, {
         height: '360',
         width: '640',
@@ -41,6 +48,7 @@ function SecureVideo() {
               setIsPlaying(true)
               setIsPaused(false)
               setShowControls(true)
+              setVideoEnded(false)
               startHideControlsTimer()
             } else if (event.data === window.YT.PlayerState.PAUSED) {
               setIsPlaying(true)
@@ -50,6 +58,7 @@ function SecureVideo() {
               setIsPlaying(false)
               setIsPaused(false)
               setShowControls(true)
+              setVideoEnded(true)
             }
           },
           onError: (event) => {
@@ -70,14 +79,14 @@ function SecureVideo() {
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
       }
     }
-    // Prevent right click on the whole container
+    
     const handleContextMenu = (e) => {
       e.preventDefault()
       return false
     }
     document.addEventListener('contextmenu', handleContextMenu)
 
-    // Prevent inspect element and dev tools
+    
     const handleKeyDown = (e) => {
       const devToolsKeys = [
         { key: 'F12' },
@@ -101,7 +110,7 @@ function SecureVideo() {
       }
     }
 
-    // Detect dev tools
+    
     const handleDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160
       const heightThreshold = window.outerHeight - window.innerHeight > 160
@@ -111,14 +120,14 @@ function SecureVideo() {
       }
     }
 
-    // Add event listeners
+    
     document.addEventListener('keydown', handleKeyDown)
     window.addEventListener('resize', handleDevTools)
 
-    // Initial check
+    
     handleDevTools()
 
-    // Cleanup
+    
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu)
       document.removeEventListener('keydown', handleKeyDown)
@@ -186,7 +195,7 @@ function SecureVideo() {
     }
   }
 
-  // Add rewind handler
+  
   const handleRewindClick = () => {
     if (playerRef.current && playerRef.current.getCurrentTime && playerRef.current.seekTo) {
       const currentTime = playerRef.current.getCurrentTime();
@@ -202,6 +211,64 @@ function SecureVideo() {
       }
     }
   }, [isPaused])
+
+  
+  useEffect(() => {
+    let raf;
+    function update() {
+      if (playerRef.current && playerRef.current.getCurrentTime && playerRef.current.getDuration) {
+        const d = playerRef.current.getDuration();
+        const t = playerRef.current.getCurrentTime();
+        setDuration(d);
+        if (!dragging && d > 0) setProgress(t / d);
+      }
+      raf = requestAnimationFrame(update);
+    }
+    if (playerRef.current && isPlaying !== false) {
+      raf = requestAnimationFrame(update);
+    }
+    return () => raf && cancelAnimationFrame(raf);
+  }, [dragging, isPlaying]);
+
+  
+  function handlePointerDown(e) {
+    setDragging(true);
+    moveThumb(e);
+    window.addEventListener("pointermove", moveThumb);
+    window.addEventListener("pointerup", handlePointerUp);
+  }
+  function handlePointerUp(e) {
+    setDragging(false);
+    moveThumb(e, true);
+    window.removeEventListener("pointermove", moveThumb);
+    window.removeEventListener("pointerup", handlePointerUp);
+  }
+  function moveThumb(e, seek = false) {
+    if (!progressBarRef.current || !playerRef.current) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    let percent = (x - rect.left) / rect.width;
+    percent = Math.max(0, Math.min(1, percent));
+    setProgress(percent);
+    if (seek && playerRef.current.seekTo && duration) {
+      playerRef.current.seekTo(percent * duration, true);
+    }
+  }
+  
+  function formatTime(sec) {
+    if (!isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
+
+  const handleReplayClick = () => {
+    if (playerRef.current && playerRef.current.seekTo) {
+      playerRef.current.seekTo(0)
+      playerRef.current.playVideo()
+      setVideoEnded(false)
+    }
+  }
 
   if (isDevToolsOpen) {
     return (
@@ -221,7 +288,7 @@ function SecureVideo() {
       style={{ position: 'relative' }}
     >
       <div id={playerId} />
-      {/* Transparent overlay to block YouTube context menu */}
+      
       <div
         style={{
           position: 'absolute',
@@ -239,7 +306,6 @@ function SecureVideo() {
         className="video-overlay"
         style={{ pointerEvents: 'none' }}
       >
-        {/* Rewind button: show when playing or paused and controls are visible */}
         {(isPlaying || isPaused) && showControls && (
           <div
             className="rewind-button"
@@ -251,7 +317,6 @@ function SecureVideo() {
             &#8630;
           </div>
         )}
-        {/* Controls get pointer events */}
         {!isPlaying && playerReady && (
           <div 
             className="play-button"
@@ -286,6 +351,107 @@ function SecureVideo() {
             {isFullscreen ? '⤢' : '⤢'}
           </div>
         )}
+        
+        {videoEnded && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'black',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'auto',
+              zIndex: 3
+            }}
+          >
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                marginBottom: 16
+              }}
+              onClick={handleReplayClick}
+            >
+              <span style={{ fontSize: 40, color: 'white' }}>↺</span>
+            </div>
+            <span style={{ color: 'white', fontSize: 18 }}>Replay Video</span>
+          </div>
+        )}
+      </div>
+      <div
+        ref={progressBarRef}
+        className="yt-progress-bar"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 32,
+          display: "flex",
+          alignItems: "center",
+          padding: "0 16px",
+          zIndex: 10,
+          userSelect: "none",
+        }}
+        onPointerDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
+      >
+        <span style={{ color: "#fff", fontSize: 12, marginRight: 8 }}>
+          {formatTime(progress * duration)}
+        </span>
+        <div
+          style={{
+            flex: 1,
+            height: 6,
+            background: "rgba(255,255,255,0.2)",
+            borderRadius: 3,
+            position: "relative",
+            cursor: "pointer",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: `${progress * 100}%`,
+              background: "linear-gradient(90deg, #646cff, #00c6ff)",
+              borderRadius: 3,
+              transition: dragging ? "none" : "width 0.1s",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: `calc(${progress * 100}% - 8px)`,
+              top: -4,
+              width: 16,
+              height: 16,
+              background: "#fff",
+              borderRadius: "50%",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              border: "2px solid #646cff",
+              cursor: "pointer",
+              transition: dragging ? "none" : "left 0.1s",
+              zIndex: 2,
+            }}
+          />
+        </div>
+        <span style={{ color: "#fff", fontSize: 12, marginLeft: 8 }}>
+          {formatTime(duration)}
+        </span>
       </div>
     </div>
   )

@@ -5,7 +5,6 @@ const cors = require('cors');
 
 const app = express();
 
-// Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app'
@@ -18,20 +17,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  // Set CSP based on environment
   if (process.env.NODE_ENV === 'production') {
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self' https://www.youtube.com https://video-player-s.vercel.app; connect-src 'self' https://video-player-s.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
     );
   } else {
-    // Development CSP - more permissive
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self' https://www.youtube.com; connect-src 'self' http://localhost:* http://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
@@ -40,7 +36,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -48,7 +43,7 @@ app.use(session({
   cookie: { 
     secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, 
     sameSite: 'lax'
   }
 }));
@@ -103,7 +98,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// For local development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
@@ -111,5 +105,4 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Export for Vercel
 module.exports = app; 
