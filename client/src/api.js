@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.PROD 
+  ? 'https://video-player-s.vercel.app/api'  // Make sure to include /api
+  : '/api';
 
 export const fetchWithCredentials = async (endpoint, options = {}) => {
   const response = await fetch(`${API_URL}${endpoint}`, {
