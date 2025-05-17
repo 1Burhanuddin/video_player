@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 
 const corsOptions = {
-  origin: 'https://video-player-f.vercel.app',
+  origin: ['https://video-player-f.vercel.app', 'https://video-player-s.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -22,11 +22,19 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  const csp = "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app; " +
-              "connect-src 'self' https://video-player-s.vercel.app; " +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; " +
-              "frame-src 'self' https://www.youtube.com; " +
-              "style-src 'self' 'unsafe-inline';";
+  // Production CSP with both frontend and backend URLs
+  const csp = [
+    "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app",
+    "connect-src 'self' https://video-player-s.vercel.app https://video-player-f.vercel.app",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api",
+    "frame-src 'self' https://www.youtube.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; ');
   
   res.setHeader('Content-Security-Policy', csp);
   next();
