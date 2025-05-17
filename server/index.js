@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'https://video-player.vercel.app',
+  origin: process.env.FRONTEND_URL || 'https://video-player-f.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self' https://www.youtube.com https://video-player.vercel.app; connect-src 'self' https://video-player.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
+    "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app; connect-src 'self' https://video-player-f.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
   );
   next();
 });
