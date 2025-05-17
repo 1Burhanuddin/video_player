@@ -5,8 +5,34 @@ const cors = require('cors');
 
 const app = express();
 
+// Remove any existing CSP headers
+app.use((req, res, next) => {
+  // Remove any existing CSP headers
+  res.removeHeader('Content-Security-Policy');
+  res.removeHeader('X-Frame-Options');
+  res.removeHeader('X-Content-Type-Options');
+  res.removeHeader('X-XSS-Protection');
+  next();
+});
+
+// Set new CSP headers
+app.use((req, res, next) => {
+  // Basic security headers
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Simplified CSP for production
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self' https://*.vercel.app; connect-src 'self' https://*.vercel.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com; frame-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
+// Update CORS configuration
 const corsOptions = {
-  origin: ['https://video-player-f.vercel.app', 'https://video-player-s.vercel.app'],
+  origin: true, // Allow all origins temporarily for testing
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -16,29 +42,6 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  
-  // Production CSP with both frontend and backend URLs
-  const csp = [
-    "default-src 'self' https://www.youtube.com https://video-player-f.vercel.app",
-    "connect-src 'self' https://video-player-s.vercel.app https://video-player-f.vercel.app",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/iframe_api",
-    "frame-src 'self' https://www.youtube.com",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
-    "font-src 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'"
-  ].join('; ');
-  
-  res.setHeader('Content-Security-Policy', csp);
-  next();
-});
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',

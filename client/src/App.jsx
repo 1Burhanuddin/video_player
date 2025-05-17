@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import SecureVideo from './components/SecureVideo'
+import { checkSession } from './api'
 
 const API_URL = import.meta.env.PROD 
   ? 'https://video-player-s.vercel.app/api'
@@ -14,12 +15,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
       try {
-        console.log('Checking session...')
-        const response = await fetch(`${API_URL}/protected`, {
-          credentials: 'include'
-        })
+        const response = await checkSession();
         if (response.ok) {
           console.log('Session valid')
           setIsLoggedIn(true)
@@ -27,13 +25,13 @@ function App() {
           console.log('No valid session')
           setIsLoggedIn(false)
         }
-      } catch (err) {
-        console.error('Session check error:', err)
+      } catch (error) {
+        console.error('Session check error:', error);
         setIsLoggedIn(false)
       }
-    }
-    checkSession()
-  }, [])
+    };
+    checkAuth();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault()
