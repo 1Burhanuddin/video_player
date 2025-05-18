@@ -14,6 +14,18 @@ function App() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+    useEffect(() => {
+    // Force logout on every page refresh
+    fetch('/api/logout', {
+      method: 'POST',
+      credentials: 'include',
+    }).finally(() => {
+      localStorage.removeItem('devtools_detected'); // Optional: reset devtools flag
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    });
+  }, []);
+  
   useEffect(() => {
     const checkAuth = async () => {
       try {
