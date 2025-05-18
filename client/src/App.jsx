@@ -21,7 +21,7 @@ function App() {
       credentials: 'include',
     }).finally(() => {
       localStorage.removeItem('devtools_detected'); // Optional: reset devtools flag
-      setIsAuthenticated(false);
+      setIsLoggedIn(false);
       setIsLoading(false);
     });
   }, []);
