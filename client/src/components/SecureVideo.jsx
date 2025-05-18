@@ -111,31 +111,14 @@ function SecureVideo() {
     }
 
     
-   const handleDevTools = () => {
-  const widthThreshold = window.outerWidth - window.innerWidth > 160;
-  const heightThreshold = window.outerHeight - window.innerHeight > 160;
-
-  const isDetected = widthThreshold || heightThreshold;
-
-  if (isDetected) {
-    setIsDevToolsOpen(true);
-    localStorage.setItem('devtools_detected', 'true');
-
-    // Force logout instantly
-    fetch('/api/logout', {
-      method: 'POST',
-      credentials: 'include',
-    }).finally(() => {
-      window.location.href = '/'; // or navigate to login page
-    });
-
-    if (playerRef.current) {
-      playerRef.current.destroy();
-      playerRef.current = null;
+    const handleDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 160
+      const heightThreshold = window.outerHeight - window.innerHeight > 160
+      
+      if (widthThreshold || heightThreshold) {
+        setIsDevToolsOpen(true)
+      }
     }
-  }
-};
-
 
     
     document.addEventListener('keydown', handleKeyDown)
@@ -276,7 +259,7 @@ function SecureVideo() {
     if (!isFinite(sec)) return "0:00";
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
-    return ${m}:${s.toString().padStart(2, "0")};
+    return `${m}:${s.toString().padStart(2, "0")}`;
   }
 
   const handleReplayClick = () => {
@@ -443,7 +426,7 @@ function SecureVideo() {
               left: 0,
               top: 0,
               height: "100%",
-              width: ${progress * 100}%,
+              width: `${progress * 100}%`,
               background: "linear-gradient(90deg, #646cff, #00c6ff)",
               borderRadius: 3,
               transition: dragging ? "none" : "width 0.1s",
@@ -452,7 +435,7 @@ function SecureVideo() {
           <div
             style={{
               position: "absolute",
-              left: calc(${progress * 100}% - 8px),
+              left: `calc(${progress * 100}% - 8px)`,
               top: -4,
               width: 16,
               height: 16,
