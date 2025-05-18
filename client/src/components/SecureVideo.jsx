@@ -111,14 +111,31 @@ function SecureVideo() {
     }
 
     
-    const handleDevTools = () => {
-      const widthThreshold = window.outerWidth - window.innerWidth > 160
-      const heightThreshold = window.outerHeight - window.innerHeight > 160
-      
-      if (widthThreshold || heightThreshold) {
-        setIsDevToolsOpen(true)
-      }
+   const handleDevTools = () => {
+  const widthThreshold = window.outerWidth - window.innerWidth > 160;
+  const heightThreshold = window.outerHeight - window.innerHeight > 160;
+
+  const isDetected = widthThreshold || heightThreshold;
+
+  if (isDetected) {
+    setIsDevToolsOpen(true);
+    localStorage.setItem('devtools_detected', 'true');
+
+    // Force logout instantly
+    fetch('/api/logout', {
+      method: 'POST',
+      credentials: 'include',
+    }).finally(() => {
+      window.location.href = '/'; // or navigate to login page
+    });
+
+    if (playerRef.current) {
+      playerRef.current.destroy();
+      playerRef.current = null;
     }
+  }
+};
+
 
     
     document.addEventListener('keydown', handleKeyDown)
